@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Spacio</title>
+  <desc id="desc">Spacio: share the space you have, find the space you want.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101211"/>
+      <stop offset="1" stop-color="#202421"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.86" cy="0.05" r="0.65">
+      <stop offset="0" stop-color="#B7FF35" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#B7FF35" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.05" cy="1" r="0.5">
+      <stop offset="0" stop-color="#B7FF35" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#B7FF35" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lime" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B7FF35"/>
+      <stop offset="1" stop-color="#A5E92B"/>
+    </linearGradient>
+    <pattern id="grid" width="52" height="52" patternUnits="userSpaceOnUse">
+      <path d="M52 0H0V52" fill="none" stroke="#ffffff" stroke-opacity="0.05"/>
+    </pattern>
+    <style>
+      text { font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+      .up { animation: up 0.9s ease both; }
+      .d1 { animation-delay: 0.15s; } .d2 { animation-delay: 0.35s; } .d3 { animation-delay: 0.55s; } .d4 { animation-delay: 0.75s; }
+      .float { animation: float 5s ease-in-out infinite; }
+      .f2 { animation-duration: 6s; animation-delay: -1.2s; }
+      .f3 { animation-duration: 5.5s; animation-delay: -2.4s; }
+      .f4 { animation-duration: 6.5s; animation-delay: -3.3s; }
+      .pulse { animation: pulse 2.6s ease-in-out infinite; }
+      @keyframes up { from { opacity: 0; transform: translateY(14px); } }
+      @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+    </style>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#bg)"/>
+  <rect width="1200" height="420" fill="url(#grid)"/>
+  <rect width="1200" height="420" fill="url(#glow)"/>
+  <rect width="1200" height="420" fill="url(#glow2)"/>
+
+  <!-- logo + name -->
+  <g class="up">
+    <rect x="80" y="64" width="52" height="52" rx="15" fill="#B7FF35"/>
+    <rect x="94" y="78" width="24" height="24" rx="6" fill="#101211"/>
+    <text x="150" y="104" font-size="40" font-weight="800" fill="#FFFFFF" letter-spacing="-1">Spacio</text>
+  </g>
+
+  <!-- headline -->
+  <text class="up d1" x="80" y="204" font-size="54" font-weight="800" fill="#FFFFFF" letter-spacing="-1.5">Share the space you have.</text>
+  <text class="up d2" x="80" y="268" font-size="54" font-weight="800" fill="#B7FF35" letter-spacing="-1.5">Find the space you want.</text>
+  <text class="up d3" x="80" y="322" font-size="21" fill="#A9B1AB">A peer-to-peer marketplace for unused spaces.</text>
+
+  <!-- status pill -->
+  <g class="up d4">
+    <rect x="80" y="350" width="236" height="34" rx="17" fill="#B7FF35" fill-opacity="0.12" stroke="#B7FF35" stroke-opacity="0.35"/>
+    <circle class="pulse" cx="102" cy="367" r="5" fill="#B7FF35"/>
+    <text x="116" y="372" font-size="15" font-weight="600" fill="#B7FF35">MERN stack · Live demo</text>
+  </g>
+
+  <!-- floating category tiles -->
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="1.8">
+    <g class="float">
+      <rect x="800" y="62" width="150" height="150" rx="28" fill="#202421" stroke="#343A36" stroke-width="1.5"/>
+      <g transform="translate(849 90) scale(2)" stroke="#B7FF35"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z M3 8l9 5 9-5 M12 13v8"/></g>
+      <text x="875" y="188" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle" stroke="none">Storage</text>
+    </g>
+    <g class="float f2">
+      <rect x="976" y="102" width="150" height="150" rx="28" fill="url(#lime)"/>
+      <g transform="translate(1025 130) scale(2)" stroke="#101211"><path d="M3 17v-5l2-6h14l2 6v5H3z M3 12h18 M7 17v2 M17 17v2"/></g>
+      <text x="1051" y="228" font-size="17" font-weight="700" fill="#101211" text-anchor="middle" stroke="none">Parking</text>
+    </g>
+    <g class="float f3">
+      <rect x="800" y="238" width="150" height="150" rx="28" fill="#202421" stroke="#343A36" stroke-width="1.5"/>
+      <g transform="translate(849 266) scale(2)" stroke="#B7FF35"><path d="M3 4h18v12H3z M8 20h8 M12 16v4"/></g>
+      <text x="875" y="364" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle" stroke="none">Workspaces</text>
+    </g>
+    <g class="float f4">
+      <rect x="976" y="278" width="150" height="110" rx="28" fill="#202421" stroke="#343A36" stroke-width="1.5"/>
+      <g transform="translate(1025 292) scale(2)" stroke="#B7FF35"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5L12 3z"/></g>
+      <text x="1051" y="372" font-size="17" font-weight="700" fill="#FFFFFF" text-anchor="middle" stroke="none">Events</text>
+    </g>
+  </g>
+</svg>
