@@ -5,7 +5,7 @@ import { useAuth } from "../AuthContext.jsx";
 import ListingCard from "../components/ListingCard.jsx";
 import { ListingsMap } from "../components/Maps.jsx";
 import Icon from "../components/Icons.jsx";
-import { CATEGORIES, errorMessage } from "../utils.js";
+import { CATEGORIES, errorMessage, localToday } from "../utils.js";
 
 const emptyFilters = { category: "", city: "", maxPrice: "", startDate: "", endDate: "", lat: "", lng: "" };
 
@@ -36,7 +36,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const resultsRef = useRef(null);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
 
   // Ask the server for spaces that match the filters (empty ones are skipped)
   async function search(f = filters) {

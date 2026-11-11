@@ -8,14 +8,12 @@ const bookingSchema = new mongoose.Schema(
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     totalAmount: { type: Number, required: true },
-    // pending -> approved -> paid   (or rejected / cancelled)
+    // pending -> approved (shown as "Confirmed")   or rejected / cancelled
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected", "cancelled", "paid"],
+      enum: ["pending", "approved", "rejected", "cancelled"],
       default: "pending",
     },
-    razorpayOrderId: String,
-    razorpayPaymentId: String,
   },
   { timestamps: true }
 );

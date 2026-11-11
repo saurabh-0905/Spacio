@@ -4,13 +4,15 @@ import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import auth from "../middleware/auth.js";
 import { cleanPhone, isValidPhone } from "../utils/phone.js";
+import { isDemoEmail } from "../utils/demo.js";
+import { deleteUserData } from "../utils/cleanup.js";
 import User from "../models/User.js";
 
 const router = express.Router();
 
 // The user details we are happy to send to the browser (never the password)
 function publicUser(user) {
-  return { id: user._id, name: user.name, email: user.email, phone: user.phone || "" };
+  return { id: user._id, name: user.name, email: user.email, phone: user.phone || "", hasPassword: Boolean(user.password) };
 }
 
 // Create a token and the user info we send back to the browser
@@ -127,6 +129,28 @@ router.put("/me", auth, async (req, res) => {
   user.phone = phone || undefined; // an empty box removes the number
   await user.save();
   res.json(publicUser(user));
+});
+
+// DELETE /api/auth/me  { confirm: "DELETE", password }  -> delete the account for good
+// Removes the user's spaces (with their bookings, chats, reviews and photos), the bookings they made, and the account.
+router.delete("/me", auth, async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user) return res.status(404).json({ message: "Account not found" });
+
+  // The demo account owns the sample listings that show how Spacio works, so it is kept
+  if (isDemoEmail(user.email)) {
+    return res.status(400).json({ message: "The demo account cannot be deleted." });
+  }
+  if (req.body.confirm !== "DELETE") {
+    return res.status(400).json({ message: "Please type DELETE to confirm" });
+  }
+  // Accounts with a password must also type it. Google accounts have no password.
+  if (user.password && !(await bcrypt.compare(String(req.body.password || ""), user.password))) {
+    return res.status(400).json({ message: "Wrong password" });
+  }
+
+  await deleteUserData(user);
+  res.json({ message: "Your account has been deleted" });
 });
 
 export default router;

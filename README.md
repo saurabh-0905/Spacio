@@ -9,7 +9,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-101211?style=for-the-badge&logo=nodedotjs&logoColor=B7FF35)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-101211?style=for-the-badge&logo=mongodb&logoColor=B7FF35)](https://www.mongodb.com/atlas)
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-101211?style=for-the-badge&logo=socketdotio&logoColor=B7FF35)](https://socket.io/)
-[![Razorpay](https://img.shields.io/badge/Razorpay-101211?style=for-the-badge&logo=razorpay&logoColor=B7FF35)](https://razorpay.com/)
 
 **Spacio turns unused physical spaces into income, and helps people find affordable space for a day or a month.**
 
@@ -35,7 +34,7 @@ Plenty of garages, parking spots, spare rooms and terraces sit empty, while othe
 |:--|:--|
 | List a space with photos, a map location, a daily price and your contact number. | Search by category, city, budget, free dates or distance from you. |
 | Approve requests yourself, or switch on instant booking. | Request a booking, or book instantly when the host allows it. |
-| Chat with guests and watch your earnings on a simple dashboard. | Pay securely online, chat with the host, and leave a review. |
+| Edit or delete your spaces, chat with guests and track requests on a simple dashboard. | Chat with the host, call them directly, and leave a review. |
 
 ### What can you rent?
 
@@ -45,6 +44,8 @@ Plenty of garages, parking spots, spare rooms and terraces sit empty, while othe
 | 🚗 | **Parking** | Spots for cars, bikes and commercial vehicles |
 | 💼 | **Workspaces** | Private offices, meeting rooms, coworking spots, studios |
 | 🎉 | **Event spaces** | Terraces, party halls, photography venues |
+| ⚽ | **Sports** | Courts, turfs, pitches and grounds |
+| 🧩 | **Other** | Anything that does not fit the rest |
 
 ---
 
@@ -63,20 +64,20 @@ Plenty of garages, parking spots, spare rooms and terraces sit empty, while othe
 </td>
 <td width="33%" valign="top">
 
-**Booking and payment**
+**Booking**
 - Request booking or instant booking
 - Host approve / reject flow
 - Double-booking protection
-- Razorpay checkout, verified on the server
+- "Unavailable today" badge on booked spaces
 
 </td>
 <td width="33%" valign="top">
 
 **Community**
 - Live chat for every booking (Socket.IO)
-- One review per paid booking
+- One review per confirmed booking
 - Host phone number with Call and WhatsApp buttons
-- Profile page for name, email and mobile
+- Profile page for name, email and mobile, and a delete-account option
 
 </td>
 </tr>
@@ -94,7 +95,8 @@ Plenty of garages, parking spots, spare rooms and terraces sit empty, while othe
 **Hosting a space**
 - Up to 4 photos, with remove and reorder
 - Address search with suggestions, click or drag the pin
-- Dashboard: spaces, pending requests, paid bookings, earnings
+- Edit or delete your spaces any time
+- Dashboard: spaces, pending requests, confirmed and upcoming bookings
 
 </td>
 <td width="33%" valign="top">
@@ -116,14 +118,17 @@ Plenty of garages, parking spots, spare rooms and terraces sit empty, while othe
 
 - **Accounts:** register and log in with email and password (bcrypt, 7-day JWT) or with Google; Google users are matched by Google ID so changing the email never creates a duplicate account.
 - **Profile and settings:** an account menu on the round letter icon; edit name, email and mobile number; log out from the menu only.
-- **Listings:** title, description, category, address, city, daily price, instant-booking switch, contact number, up to 4 photos (5 MB each) stored on Cloudinary.
+- **Listings:** six categories (Storage, Parking, Workspaces, Event spaces, Sports, Other); title, description, address, city, daily price, instant-booking switch, contact number and up to 4 photos (5 MB each) stored on Cloudinary.
+- **Edit and delete:** hosts can change anything, including photos (keep, remove, reorder, add) and the map pin. Deleting a space also removes its bookings, chats, reviews and photos.
+- **Demo listings:** every space owned by the demo account (the Spacio support email) carries a "Demo listing" tag and a short notice.
 - **Location:** search an address (OpenStreetMap data through Photon) and pick a suggestion, click the map, drag the pin, or use your own location. Locations are saved as GeoJSON with a `2dsphere` index.
-- **Search:** category, city, max price per day, free dates (spaces with approved or paid bookings in the range are hidden) and a 10 km "near me" mode.
+- **Search:** category, city, max price per day, free dates (spaces with confirmed bookings in the range are hidden) and a 10 km "near me" mode. A space with a confirmed booking for today shows an **Unavailable today** badge.
 - **Bookings:** price is `price per day × number of days` (first and last day both count). Past dates, your own spaces and already-booked dates are rejected.
-- **Statuses:** `pending → approved → paid`, or `rejected` / `cancelled`. Guests can cancel before paying.
-- **Payments:** Razorpay orders are created on the server, and the payment signature is verified on the server before a booking becomes `paid`.
+- **Statuses:** `pending → approved` (shown as **Confirmed**), or `rejected` / `cancelled`. Guests can cancel a pending or confirmed booking.
+- **No online payments:** Spacio does not handle money. After a booking is confirmed, guest and host agree on payment directly through the chat or by phone (a **Call host** button is shown).
 - **Chat:** one private room per booking; only the host and guest can join; history is saved in MongoDB.
-- **Reviews:** only the guest of a paid booking, once per booking; the average rating shows on the space page.
+- **Reviews:** only the guest of a confirmed booking, once per booking; the average rating shows on the space page.
+- **Account deletion:** from Profile & settings (password and the word DELETE are required). It removes the user's spaces, bookings, chats and reviews.
 - **Contact privacy:** a host's number is never sent in search results and is only returned to logged-in users.
 - **Support bot:** a fact sheet about Spacio is sent with every question; answers stream from Groq; limited to 15 messages per minute per visitor.
 - **Legal:** Privacy Policy (`/privacy`) and Terms of Use (`/terms`), linked from the login page and the footer.
@@ -151,20 +156,19 @@ Plenty of garages, parking spots, spare rooms and terraces sit empty, while othe
 stateDiagram-v2
     direction LR
     [*] --> Pending: Guest requests
-    [*] --> Approved: Instant booking
-    Pending --> Approved: Host approves
+    [*] --> Confirmed: Instant booking
+    Pending --> Confirmed: Host approves
     Pending --> Rejected: Host rejects
     Pending --> Cancelled: Guest cancels
-    Approved --> Paid: Guest pays with Razorpay
-    Approved --> Cancelled: Guest cancels
-    Paid --> [*]: Guest can leave one review
+    Confirmed --> Cancelled: Guest cancels
+    Confirmed --> [*]: Guest can leave one review
 ```
 
 1. **A host lists a space** with photos, a map location, a daily price and a contact number.
 2. **A guest searches and picks dates.** The total is shown before booking.
-3. **The host approves** (or the booking is instant).
-4. **The guest pays** through Razorpay. The server checks the payment signature.
-5. **Both sides chat** inside the booking, and the guest can review the space afterwards.
+3. **The host approves** (or the booking is instant), and it shows as **Confirmed**.
+4. **Both sides talk** in the booking chat or by phone, and agree on payment and handover directly.
+5. **The guest can review the space** afterwards.
 
 ---
 
@@ -193,7 +197,6 @@ stateDiagram-v2
 | Backend | Node.js, Express | REST API and Socket.IO server |
 | Database | MongoDB Atlas, Mongoose | Users, listings, bookings, reviews, messages |
 | Auth | JWT, bcrypt, Google Identity Services | Email login and "Continue with Google" |
-| Payments | Razorpay | Checkout, with server-side signature check |
 | Images | Cloudinary, Multer | Listing photo upload and delivery |
 | Real time | Socket.IO | Booking chat |
 | AI | Groq (`openai/gpt-oss-20b`) | Streaming answers for the support assistant |
@@ -209,7 +212,6 @@ flowchart LR
     A["Express API<br/>Node.js on Render"]
     D[("MongoDB Atlas")]
     C["Cloudinary<br/>photos"]
-    R["Razorpay<br/>payments"]
     G["Google Sign-In<br/>ID token check"]
     Q["Groq<br/>support AI"]
     M["OpenStreetMap + Photon<br/>map tiles, address search"]
@@ -218,10 +220,8 @@ flowchart LR
     U <-->|Socket.IO chat| A
     A --> D
     A -->|upload| C
-    A -->|create order, verify signature| R
     A -->|verify credential| G
     A -->|stream answers| Q
-    U -->|payment popup| R
     U --> M
 ```
 
@@ -266,9 +266,9 @@ Spacio/
 │   ├── config/cloudinary.js     photo upload
 │   ├── middleware/              auth.js, optionalAuth.js
 │   ├── models/                  User, Listing, Booking, Review, Message
-│   ├── routes/                  auth, listings, bookings, payments, reviews, messages, support
+│   ├── routes/                  auth, listings, bookings, reviews, messages, support
 │   ├── support/knowledge.js     fact sheet the AI assistant answers from
-│   └── utils/phone.js           phone number cleaning and checking
+│   └── utils/                   phone, dates (today in India), demo tag, cleanup of deleted data
 └── docs/                        banner and footer images
 ```
 
@@ -280,16 +280,16 @@ Spacio/
 | Area | Endpoint | Notes |
 |:--|:--|:--|
 | Auth | `POST /api/auth/register`, `/login`, `/google` | Returns a JWT and the user |
-| Profile | `GET` and `PUT /api/auth/me` | Name, email, mobile (login required) |
+| Profile | `GET`, `PUT` and `DELETE /api/auth/me` | Name, email, mobile; delete the account (login required) |
 | Listings | `GET /api/listings` | Filters: `category`, `city`, `maxPrice`, `startDate`, `endDate`, `lat`, `lng` |
 | | `GET /api/listings/:id` | Includes the host phone only for logged-in users |
 | | `GET /api/listings/mine` | The host's own spaces |
-| | `POST /api/listings`, `DELETE /api/listings/:id` | Photos sent as multipart form data |
+| | `POST /api/listings`, `PUT /api/listings/:id` | Create or edit. Photos sent as multipart form data |
+| | `DELETE /api/listings/:id` | Also removes bookings, chats, reviews and photos |
 | Bookings | `POST /api/bookings` | Request or instant booking |
 | | `GET /api/bookings/mine`, `/requests`, `/:id` | Guest view, host view, one booking |
 | | `PUT /api/bookings/:id/status` | Approve, reject or cancel |
-| Payments | `POST /api/payments/create-order`, `/verify` | Razorpay order and signature check |
-| Reviews | `GET /api/reviews/listing/:id`, `POST /api/reviews` | Only for paid bookings |
+| Reviews | `GET /api/reviews/listing/:id`, `POST /api/reviews` | Only for confirmed bookings |
 | Chat | `GET /api/messages/:bookingId` | History; live messages use Socket.IO (`join`, `send`, `message`) |
 | Support | `POST /api/support/chat` | Streamed plain-text answer |
 | Health | `GET /health` | Used by Render |
@@ -300,7 +300,7 @@ Spacio/
 
 ## Getting started
 
-**You will need:** Node.js 20 or newer, a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster, and free accounts for Cloudinary and Razorpay (test mode). Groq and Google sign-in are optional.
+**You will need:** Node.js 20 or newer, a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster, and a free Cloudinary account. Groq and Google sign-in are optional.
 
 ### 1. Get the code
 
@@ -342,10 +342,10 @@ Open **http://localhost:5173**.
 | `JWT_SECRET` | yes | Any long random text (generate a new one for the live site) |
 | `CLIENT_URL` | yes | The website address, for example `http://localhost:5173`. Several addresses can be separated by commas |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | yes | Cloudinary dashboard |
-| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | yes | Razorpay, Settings, API Keys (use **Test Mode**) |
 | `GROQ_API_KEY` | no | console.groq.com. Without it the typed support chat shows "not set up yet" |
 | `GROQ_MODEL` | no | Defaults to `openai/gpt-oss-20b` |
 | `GOOGLE_CLIENT_ID` | no | Google Cloud, Google Auth Platform, Clients |
+| `DEMO_EMAIL` | no | Listings created by this account get a "Demo listing" tag. Defaults to the Spacio support email |
 
 </details>
 
@@ -366,8 +366,8 @@ Vite reads these values when it starts or builds, so restart `npm run dev` (or r
 1. Sign up as user A and click **List a space**. Search an address, add photos and a phone number.
 2. Sign up as user B in a private window and book that space.
 3. As user A open **My spaces** and approve the request.
-4. As user B open **My bookings** and pay with the Razorpay test card `4111 1111 1111 1111` (any future expiry, any CVV).
-5. Use the **Chat** button on either side, then leave a review as user B.
+4. As user B open **My bookings**: the booking shows **Confirmed**. Use **Chat** or **Call host**, then leave a review.
+5. As user A, try **Edit** on your space, and check that a booked space shows **Unavailable today**.
 
 ---
 
@@ -386,7 +386,8 @@ Then set `CLIENT_URL` on Render to the Vercel address and add the same address t
 ## Security notes
 
 - Passwords are stored only as bcrypt hashes. Google credentials are verified on the server against your Client ID.
-- Payment signatures are verified on the server. Card details never touch Spacio.
+- Spacio never handles money or card details.
+- Deleting a space or an account also deletes the related bookings, chats, reviews and photos, so no orphan data is left behind.
 - Protected routes check a JWT. Listings, bookings, chat and reviews check that you are the owner or the guest.
 - Host phone numbers are left out of search results and only sent to logged-in users.
 - CORS only allows the addresses in `CLIENT_URL`. Uploads are limited to 4 images of 5 MB each. The support chat is limited to 15 messages per minute per visitor.
@@ -397,11 +398,12 @@ Then set `CLIENT_URL` on Render to the Vercel address and add the same address t
 ## Roadmap
 
 - [x] Listings, search, map, bookings and approvals
-- [x] Razorpay payments, booking chat and reviews
+- [x] Booking chat and reviews
 - [x] Google sign-in, profile page and AI support assistant
+- [x] Edit and delete listings, delete account
+- [x] Sports and Other categories, demo tag, "Unavailable today" badge
 - [x] Privacy Policy and Terms of Use
-- [ ] Edit a listing after publishing
-- [ ] Cancel and refund after payment
+- [ ] Online payments and refunds (removed for now)
 - [ ] Password reset and email verification
 - [ ] Saved spaces and an availability calendar
 - [ ] Notifications for new requests and messages

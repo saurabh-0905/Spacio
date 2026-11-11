@@ -11,7 +11,6 @@ import dns from "dns";
 import authRoutes from "./routes/auth.js";
 import listingRoutes from "./routes/listings.js";
 import bookingRoutes from "./routes/bookings.js";
-import paymentRoutes from "./routes/payments.js";
 import reviewRoutes from "./routes/reviews.js";
 import messageRoutes from "./routes/messages.js";
 import supportRoutes from "./routes/support.js";
@@ -43,7 +42,6 @@ app.get("/health", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/bookings", bookingRoutes);
-app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/support", supportRoutes);
@@ -90,8 +88,14 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 5000;
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log("MongoDB connected");
+    // Payments were removed. Bookings that were marked "paid" in the old version are simply confirmed now.
+    try {
+      await Booking.updateMany({ status: "paid" }, { $set: { status: "approved" } });
+    } catch (err) {
+      console.error("Could not update old bookings:", err.message);
+    }
     server.listen(PORT, () => console.log("Server running on port " + PORT));
   })
   .catch((err) => console.error("MongoDB connection failed:", err.message));

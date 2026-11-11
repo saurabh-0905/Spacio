@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api.js";
 import { useAuth } from "../AuthContext.jsx";
 import { errorMessage } from "../utils.js";
@@ -6,12 +7,20 @@ import Icon from "../components/Icons.jsx";
 
 // Profile & settings: change your name, email and mobile number
 export default function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone || "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+
+  // Delete account
+  const [showDelete, setShowDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   // Get the latest details from the server (older logins do not have the phone number saved yet)
   useEffect(() => {
@@ -51,6 +60,28 @@ export default function Profile() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleDelete(e) {
+    e.preventDefault();
+    setDeleteError("");
+    setDeleting(true);
+    try {
+      await api.delete("/auth/me", { data: { confirm: confirmText, password: deletePassword } });
+      logout();
+      navigate("/");
+      alert("Your account has been deleted.");
+    } catch (err) {
+      setDeleteError(errorMessage(err));
+      setDeleting(false);
+    }
+  }
+
+  function closeDelete() {
+    setShowDelete(false);
+    setConfirmText("");
+    setDeletePassword("");
+    setDeleteError("");
   }
 
   return (
@@ -101,6 +132,49 @@ export default function Profile() {
           {saving ? "Saving..." : "Save changes"}
         </button>
       </form>
+
+      <section className="panel danger-zone narrow-lg">
+        <h2 className="h3">Delete account</h2>
+        <p className="muted">
+          This permanently deletes your account, your spaces (with their bookings, chats and reviews), the bookings you made,
+          and your reviews. This cannot be undone.
+        </p>
+
+        {!showDelete ? (
+          <button type="button" className="btn btn-danger" onClick={() => setShowDelete(true)} disabled={loading}>
+            <Icon name="trash" size={16} /> Delete my account
+          </button>
+        ) : (
+          <form onSubmit={handleDelete} className="delete-form">
+            {user.hasPassword && (
+              <div className="field">
+                <label htmlFor="deletePassword">Your password</label>
+                <input
+                  id="deletePassword"
+                  type="password"
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            <div className="field">
+              <label htmlFor="confirmText">Type DELETE to confirm</label>
+              <input id="confirmText" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="DELETE" autoComplete="off" />
+            </div>
+
+            {deleteError && <p className="error-box" role="alert">{deleteError}</p>}
+
+            <div className="form-actions">
+              <button type="submit" className="btn btn-danger-solid" disabled={confirmText !== "DELETE" || deleting}>
+                {deleting ? "Deleting..." : "Permanently delete my account"}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={closeDelete}>Keep my account</button>
+            </div>
+          </form>
+        )}
+      </section>
     </div>
   );
 }

@@ -8,23 +8,27 @@ const GREETING = "Hi! I'm Spacio's support assistant. Ask me anything about list
 const QUICK_QUESTIONS = [
   {
     q: "How do I book a space?",
-    a: "Open a space, choose your From and To dates, and click Request booking (or Book now for instant booking). If the host must approve it, you can pay from My bookings once it is approved.",
+    a: "Open a space, choose your From and To dates, and click Request booking (or Book now for instant booking). When the host approves it, or at once for instant booking, it shows as Confirmed in My bookings.",
   },
   {
-    q: "How do I pay?",
-    a: "Go to My bookings. When a booking says Approved, click Pay and finish the secure Razorpay window. The booking then changes to Paid.",
+    q: "How do I pay the host?",
+    a: "Spacio does not take payments. Once your booking is Confirmed, agree with the host how and when to pay, using the booking chat or the Call button in My bookings.",
   },
   {
     q: "How do I list my space?",
-    a: "Log in and click List a space. Add the details, up to 4 photos and the location (search the address or click the map), then click Publish space. You can manage it from My spaces.",
+    a: "Log in and click List a space. Add the details, your contact number, up to 4 photos and the location (search the address or click the map), then click Publish space. You can manage it from My spaces.",
+  },
+  {
+    q: "Can I edit or delete my space?",
+    a: "Yes. Open My spaces and click Edit or Delete next to your space, or use the same buttons on the space page. Deleting also removes that space's bookings, chats and reviews.",
   },
   {
     q: "Can I cancel a booking?",
-    a: "Yes, while it is Pending or Approved: click Cancel in My bookings. After payment, cancelling is not available in the app yet, so please chat with the host from that booking.",
+    a: "Yes. A Pending or Confirmed booking can be cancelled with the Cancel button in My bookings. Because Spacio does not handle payments, any refund is agreed directly with the host.",
   },
   {
     q: "What is instant booking?",
-    a: "Hosts can allow instant booking. Then your booking is approved straight away, without waiting for the host, and you can pay right away.",
+    a: "Hosts can allow instant booking. Then your booking is confirmed straight away, without waiting for the host.",
   },
 ];
 

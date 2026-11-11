@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../api.js";
 import { useAuth } from "../AuthContext.jsx";
 import { LocationPicker } from "../components/Maps.jsx";
@@ -8,40 +8,84 @@ import { CATEGORIES, errorMessage } from "../utils.js";
 
 const MAX_PHOTOS = 4;
 
+// Every photo in the list gets its own id, so reordering and removing stay smooth
+let photoCounter = 0;
+const photoId = () => "photo-" + photoCounter++;
+
+// One page for two jobs: "List your space" (/add-space) and "Edit your space" (/edit-space/:id)
 export default function CreateListing() {
+  const { id } = useParams(); // only present when editing
+  const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [form, setForm] = useState({
     title: "", description: "", category: "storage", address: "", city: "", pricePerDay: "", instantBook: false,
     contactPhone: user?.phone || localStorage.getItem("spacio_phone") || "", // from your profile, or your last listing
   });
   const [position, setPosition] = useState({ lat: "", lng: "" });
-  const [files, setFiles] = useState([]);
+  // Each photo is either { id, url } (already saved) or { id, file } (just chosen)
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(isEdit);
+  const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Small previews of the chosen photos
-  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
-  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
+  // When editing: load the space and fill the form with it
+  useEffect(() => {
+    if (!isEdit) return;
+    api.get("/listings/" + id)
+      .then((res) => {
+        const l = res.data;
+        if (l.owner._id !== user.id) {
+          setLoadError("You can only edit your own spaces.");
+          return;
+        }
+        setForm({
+          title: l.title,
+          description: l.description || "",
+          category: l.category,
+          address: l.address || "",
+          city: l.city || "",
+          pricePerDay: String(l.pricePerDay),
+          instantBook: l.instantBook,
+          contactPhone: l.contactPhone || user.phone || "",
+        });
+        setPosition({ lat: l.location.coordinates[1], lng: l.location.coordinates[0] });
+        setPhotos(l.images.map((url) => ({ id: photoId(), url })));
+      })
+      .catch((err) => setLoadError(errorMessage(err)))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  // Add new photos to the ones already chosen (up to 4)
+  // Small previews: saved photos use their address, new photos get a temporary one
+  const previews = useMemo(
+    () => photos.map((p) => (p.url ? p.url : URL.createObjectURL(p.file))),
+    [photos]
+  );
+  useEffect(
+    () => () => previews.forEach((u, i) => u.startsWith("blob:") && URL.revokeObjectURL(u)),
+    [previews]
+  );
+
+  // Add new photos to the ones already there (up to 4)
   function addPhotos(e) {
-    const chosen = Array.from(e.target.files);
-    setFiles((old) => [...old, ...chosen].slice(0, MAX_PHOTOS));
+    const chosen = Array.from(e.target.files).map((file) => ({ id: photoId(), file }));
+    setPhotos((old) => [...old, ...chosen].slice(0, MAX_PHOTOS));
     e.target.value = ""; // lets you pick the same photo again later
   }
 
   function removePhoto(index) {
-    setFiles(files.filter((_, i) => i !== index));
+    setPhotos(photos.filter((_, i) => i !== index));
   }
 
   // direction is -1 (move left) or 1 (move right). The first photo is the cover.
   function movePhoto(index, direction) {
     const target = index + direction;
-    if (target < 0 || target >= files.length) return;
-    const copy = [...files];
+    if (target < 0 || target >= photos.length) return;
+    const copy = [...photos];
     [copy[index], copy[target]] = [copy[target], copy[index]];
-    setFiles(copy);
+    setPhotos(copy);
   }
 
   // Called when the owner searches, clicks or drags on the map.
@@ -74,10 +118,21 @@ export default function CreateListing() {
     for (const key in form) data.append(key, form[key]);
     data.append("lat", position.lat);
     data.append("lng", position.lng);
-    for (const file of files) data.append("images", file);
+
+    const newPhotos = photos.filter((p) => p.file);
+    newPhotos.forEach((p) => data.append("images", p.file));
 
     try {
-      await api.post("/listings", data);
+      if (isEdit) {
+        // Tell the server which photos to keep and in what order: a saved photo by its address,
+        // a new one as "new:0", "new:1" ... (its position among the newly chosen files)
+        let newCount = 0;
+        const order = photos.map((p) => (p.file ? "new:" + newCount++ : p.url));
+        data.append("imageOrder", JSON.stringify(order));
+        await api.put("/listings/" + id, data);
+      } else {
+        await api.post("/listings", data);
+      }
       localStorage.setItem("spacio_phone", form.contactPhone);
       navigate("/my-spaces");
     } catch (err) {
@@ -87,11 +142,33 @@ export default function CreateListing() {
     }
   }
 
+  if (loadError) {
+    return (
+      <div className="wrap page-pad">
+        <div className="state-box">
+          <h3>This space could not be opened for editing</h3>
+          <p className="muted">{loadError}</p>
+          <Link to="/my-spaces" className="btn btn-dark">Back to my spaces</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="wrap page-pad">
+        <div className="skeleton" style={{ height: 380, borderRadius: 20 }} />
+      </div>
+    );
+  }
+
   return (
     <div className="wrap page-pad">
       <div className="page-head">
-        <h1>List your space</h1>
-        <p className="muted">Earn from what you share. Tell guests about your space in a few steps.</p>
+        <h1>{isEdit ? "Edit your space" : "List your space"}</h1>
+        <p className="muted">
+          {isEdit ? "Change anything below, then save." : "Earn from what you share. Tell guests about your space in a few steps."}
+        </p>
       </div>
 
       <form className="stack narrow-lg" onSubmit={handleSubmit}>
@@ -177,19 +254,19 @@ export default function CreateListing() {
         <section className="panel">
           <h2 className="h3">4. Photos</h2>
           <p className="muted">Add up to 4 clear photos. The first one is the cover. Use the arrows to change the order.</p>
-          <label className={"upload" + (files.length >= MAX_PHOTOS ? " disabled" : "")}>
+          <label className={"upload" + (photos.length >= MAX_PHOTOS ? " disabled" : "")}>
             <Icon name="image" size={22} />
             <span>
-              {files.length >= MAX_PHOTOS ? "Maximum 4 photos added" : files.length === 0 ? "Choose photos" : "Add more photos"}
+              {photos.length >= MAX_PHOTOS ? "Maximum 4 photos added" : photos.length === 0 ? "Choose photos" : "Add more photos"}
             </span>
-            <input type="file" accept="image/*" multiple disabled={files.length >= MAX_PHOTOS} onChange={addPhotos} />
+            <input type="file" accept="image/*" multiple disabled={photos.length >= MAX_PHOTOS} onChange={addPhotos} />
           </label>
-          <p className="muted photo-count">{files.length} / {MAX_PHOTOS} photos</p>
-          {previews.length > 0 && (
+          <p className="muted photo-count">{photos.length} / {MAX_PHOTOS} photos</p>
+          {photos.length > 0 && (
             <div className="previews">
-              {previews.map((url, i) => (
-                <div key={url} className="preview">
-                  <img src={url} alt={"Photo " + (i + 1)} />
+              {photos.map((photo, i) => (
+                <div key={photo.id} className="preview">
+                  <img src={previews[i]} alt={"Photo " + (i + 1)} />
                   {i === 0 && <span className="cover-tag">Cover</span>}
                   <button type="button" className="preview-remove" onClick={() => removePhoto(i)} aria-label={"Remove photo " + (i + 1)}>
                     <Icon name="close" size={14} />
@@ -198,7 +275,7 @@ export default function CreateListing() {
                     <button type="button" onClick={() => movePhoto(i, -1)} disabled={i === 0} aria-label="Move left">
                       <Icon name="back" size={14} />
                     </button>
-                    <button type="button" onClick={() => movePhoto(i, 1)} disabled={i === previews.length - 1} aria-label="Move right">
+                    <button type="button" onClick={() => movePhoto(i, 1)} disabled={i === photos.length - 1} aria-label="Move right">
                       <Icon name="arrow" size={14} />
                     </button>
                   </div>
@@ -209,9 +286,12 @@ export default function CreateListing() {
         </section>
 
         {error && <p className="error-box" role="alert">{error}</p>}
-        <button type="submit" className="btn btn-primary btn-lg" disabled={submitting}>
-          {submitting ? "Publishing..." : "Publish space"}
-        </button>
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary btn-lg" disabled={submitting}>
+            {submitting ? "Saving..." : isEdit ? "Save changes" : "Publish space"}
+          </button>
+          {isEdit && <Link to="/my-spaces" className="btn btn-ghost btn-lg">Cancel</Link>}
+        </div>
       </form>
     </div>
   );

@@ -19,3 +19,13 @@ export async function uploadToCloudinary(file) {
   const result = await cloudinary.uploader.upload(dataUri, { folder: "spaceshare" });
   return result.secure_url;
 }
+
+// Remove one photo from Cloudinary, given its public address. Failing is fine: it only frees storage space.
+export async function deleteFromCloudinary(url) {
+  try {
+    const match = String(url).match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/);
+    if (match) await cloudinary.uploader.destroy(match[1]);
+  } catch (err) {
+    console.error("Could not delete image:", err.message);
+  }
+}

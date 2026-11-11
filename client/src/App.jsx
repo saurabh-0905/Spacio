@@ -32,6 +32,7 @@ export default function App() {
           <Route path="/register" element={<AuthPage mode="register" />} />
           <Route path="/listings/:id" element={<ListingDetails />} />
           <Route path="/add-space" element={<Private><CreateListing /></Private>} />
+          <Route path="/edit-space/:id" element={<Private><CreateListing /></Private>} />
           <Route path="/my-spaces" element={<Private><OwnerDashboard /></Private>} />
           <Route path="/my-bookings" element={<Private><MyBookings /></Private>} />
           <Route path="/profile" element={<Private><Profile /></Private>} />

@@ -3,16 +3,17 @@ import auth from "../middleware/auth.js";
 import Booking from "../models/Booking.js";
 import Listing from "../models/Listing.js";
 import Review from "../models/Review.js";
+import { todayIST } from "../utils/dates.js";
 
 const router = express.Router();
 
-// Is any approved/paid booking already using these dates for this listing?
+// Is any confirmed (approved) booking already using these dates for this listing?
 // excludeId lets us skip the booking we are checking right now.
 async function datesAreTaken(listingId, start, end, excludeId) {
   const clash = await Booking.findOne({
     _id: { $ne: excludeId },
     listing: listingId,
-    status: { $in: ["approved", "paid"] },
+    status: "approved",
     startDate: { $lte: end },
     endDate: { $gte: start },
   });
@@ -31,8 +32,7 @@ router.post("/", auth, async (req, res) => {
 
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = todayIST();
 
   if (isNaN(start) || isNaN(end) || end < start) {
     return res.status(400).json({ message: "Please choose valid dates" });
@@ -61,7 +61,7 @@ router.post("/", auth, async (req, res) => {
 // GET /api/bookings/mine  -> bookings I made as a customer
 router.get("/mine", auth, async (req, res) => {
   const bookings = await Booking.find({ customer: req.userId })
-    .populate("listing", "title city images")
+    .populate("listing", "title city images contactPhone")
     .sort("-createdAt")
     .lean();
 
@@ -96,7 +96,7 @@ router.get("/:id", auth, async (req, res) => {
 
 // PUT /api/bookings/:id/status
 // Owner can approve / reject a pending booking.
-// Customer can cancel a pending or approved booking.
+// Customer can cancel a pending or confirmed (approved) booking.
 router.put("/:id/status", auth, async (req, res) => {
   const { status } = req.body;
   const booking = await Booking.findById(req.params.id);

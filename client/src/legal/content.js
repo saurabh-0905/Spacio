@@ -17,11 +17,11 @@ export const PRIVACY = {
           "Listing details (if you host): title, description, category, address, city, the pin you place on the map, price, photos, and the contact phone number you enter.",
           "Booking details: dates, price, booking status, and who the Host and Guest are.",
           "Messages and reviews: chat messages between a Guest and a Host about a booking, and the ratings and reviews you write.",
-          "Payment details: payments are handled by Razorpay. We do not receive or store your card, UPI or bank details. We keep the amount, the status, and the order and payment reference numbers that Razorpay gives us.",
           "Location: if you tap “Near me” or “Use my location”, your browser asks for permission first. Your position is used for that search or map and is not saved to your account.",
           "Support chat: the questions you type to the AI support assistant.",
           "Technical data: your browser keeps a login token (in local storage) so you stay signed in. Our servers may keep basic logs, such as time, IP address and errors, to keep the service secure and working.",
         ],
+        "Spacio does not take payments, so we do not receive or store any card, UPI or bank details.",
       ],
     },
     {
@@ -29,7 +29,7 @@ export const PRIVACY = {
       body: [
         [
           "To create and secure your account and sign you in.",
-          "To show listings, handle bookings and approvals, and take payments.",
+          "To show listings and handle bookings and approvals.",
           "To let Guests and Hosts contact each other, and to show reviews.",
           "To answer your questions through the support assistant.",
           "To prevent fraud, abuse and misuse, and to fix problems and improve Spacio.",
@@ -61,7 +61,6 @@ export const PRIVACY = {
         "Spacio uses trusted services to run. They receive only what they need to do their job:",
         [
           "Google: sign-in with Google, and fonts used on our pages.",
-          "Razorpay: payment processing.",
           "Cloudinary: storing and delivering listing photos.",
           "MongoDB Atlas and our hosting provider: storing our database and running our servers.",
           "Groq: creates the answers of the AI support assistant, so it receives the text of the questions you type.",
@@ -73,13 +72,13 @@ export const PRIVACY = {
     {
       title: "Cookies and local storage",
       body: [
-        "Spacio keeps your login in your browser's local storage rather than in cookies. Services we use, such as Google sign-in, Razorpay and the map providers, may set their own cookies or identifiers under their own policies.",
+        "Spacio keeps your login in your browser's local storage rather than in cookies. Services we use, such as Google sign-in and the map providers, may set their own cookies or identifiers under their own policies.",
       ],
     },
     {
       title: "How long we keep information",
       body: [
-        "We keep your information while your account is active and for as long as needed for bookings, payment records, resolving disputes and meeting legal duties. After that we delete it or remove anything that identifies you. When you delete a listing, it is removed from Spacio.",
+        "We keep your information while your account is active and for as long as needed to run bookings, resolve disputes and meet legal duties. When you delete a listing, it is removed from Spacio together with its bookings, chats, reviews and photos. When you delete your account, your profile, your listings, the bookings you made, and your messages and reviews are deleted too.",
       ],
     },
     {
@@ -93,8 +92,9 @@ export const PRIVACY = {
       body: [
         [
           "You can change your name, email and mobile number any time on the Profile & settings page.",
-          "You can delete your own listings from the My spaces page.",
-          "You can ask us to give you a copy of your information, correct it, or delete your account, by emailing us at the address below.",
+          "You can edit or delete your own listings from the My spaces page.",
+          "You can delete your account yourself on the Profile & settings page. This cannot be undone.",
+          "You can ask us for a copy of your information, or ask us to correct it, by emailing us at the address below.",
           "You can stop using Google sign-in by removing Spacio's access in your Google Account.",
         ],
         "Depending on where you live, the law, including India's Digital Personal Data Protection Act, 2023, may give you further rights. We will do our best to respond to reasonable requests.",
@@ -129,7 +129,7 @@ export const TERMS = {
     {
       title: "About Spacio",
       body: [
-        "Spacio is an online marketplace. People who list a space (“Hosts”) can rent out unused places such as storage rooms, garages, parking spots, workspaces and event spaces. People who book a space (“Guests”) can find and book them for the dates they need.",
+        "Spacio is an online marketplace. People who list a space (“Hosts”) can rent out unused places such as storage rooms, garages, parking spots, workspaces, event spaces, sports grounds and other spaces. People who book a space (“Guests”) can find and book them for the dates they need.",
       ],
     },
     {
@@ -137,6 +137,12 @@ export const TERMS = {
       body: [
         "Spacio only provides the platform that connects Hosts and Guests. We do not own, manage, inspect, insure or control any space, and we are not a party to the rental agreement between a Host and a Guest. Hosts and Guests are responsible for their own actions, for the spaces, and for the items and vehicles involved.",
         "A listing on Spacio is not an endorsement. We do not check that listings are accurate, legal or safe, and we do not guarantee any Host or Guest.",
+      ],
+    },
+    {
+      title: "Demo listings",
+      body: [
+        "Some listings are marked “Demo listing”. They are added by the Spacio team to show how the app works. They are not real offers, and you should not rely on them or expect to use those spaces.",
       ],
     },
     {
@@ -170,7 +176,7 @@ export const TERMS = {
       title: "Booking a space",
       body: [
         "A Guest chooses dates and sends a booking request, or books instantly if the Host allows it. The price is shown per day. The total is the price per day multiplied by the number of days, counting both the first and the last day.",
-        "If the Host must approve, the booking stays Pending until the Host approves or rejects it. After a booking is Approved, the Guest pays online. A booking is confirmed only when it shows as Paid. Hosts should treat a booking as confirmed only at that point.",
+        "If the Host must approve, the booking stays Pending until the Host approves or rejects it. When the Host approves, or when instant booking is used, the booking shows as Confirmed. Hosts and Guests should then agree directly on payment and on how the space is handed over.",
         "As a Guest you agree to:",
         [
           "Use the space only for the stated purpose and on the booked dates, and follow the Host's reasonable rules.",
@@ -182,20 +188,20 @@ export const TERMS = {
       ],
     },
     {
-      title: "Prices, payments and fees",
+      title: "Prices and payments",
       body: [
-        "Payments are processed by Razorpay, a third-party payment provider, and are subject to its terms. Spacio does not store your card, UPI or bank details.",
-        "At the moment Spacio does not add any extra fee or commission: the Guest pays the listed price. If we introduce fees in future, we will show them clearly on Spacio before they apply.",
-        "Be careful about paying anyone outside Spacio. We cannot help with money that was paid outside the platform.",
+        "Spacio does not take, hold or process payments. The price shown on a listing is the price the Host asks per day. Guests and Hosts agree directly how and when it is paid, and Spacio is not responsible for any payment between them.",
+        "At the moment Spacio does not charge any fee or commission. If we introduce fees in future, we will show them clearly on Spacio before they apply.",
+        "Be careful about paying anyone before you have seen the space, and keep a record of what you agree. We cannot help with money that was paid outside the platform.",
       ],
     },
     {
       title: "Cancellations, refunds and disputes",
       body: [
         [
-          "A Guest can cancel a Pending or Approved booking from the My bookings page, before paying.",
+          "A Guest can cancel a Pending or Confirmed booking from the My bookings page.",
           "A Host can reject a Pending booking request.",
-          "Once a booking is Paid, it cannot be cancelled or refunded automatically through Spacio at this time. A Guest who needs to cancel should contact the Host through the booking chat. Any refund is agreed between the Guest and the Host, and Spacio is not responsible for providing one.",
+          "Because Spacio does not handle payments, it does not handle refunds either. If money was paid, the Guest and the Host settle it between themselves.",
         ],
         "If you have a disagreement, please first try to solve it with the other person in the booking chat. Spacio may, but does not have to, help. We may remove content or suspend accounts if that is needed to keep Spacio safe and fair.",
       ],
@@ -205,7 +211,7 @@ export const TERMS = {
       body: [
         "You own the content you post, such as listings, photos, reviews and messages. By posting it on Spacio you give us a free, non-exclusive, worldwide licence to store, show and use it to run and promote Spacio.",
         [
-          "Only a Guest with a Paid booking can review that booking, and only once.",
+          "Only a Guest with a Confirmed booking can review that booking, and only once.",
           "Reviews must be honest. No fake reviews, and no reviews about a booking you did not make.",
           "Content must be lawful and must not be offensive, misleading, or include other people's private details.",
         ],
@@ -247,7 +253,7 @@ export const TERMS = {
     {
       title: "Third-party services",
       body: [
-        "Spacio works with services such as Google (sign-in), Razorpay (payments), Cloudinary (photos), OpenStreetMap (maps) and Groq (the AI assistant). Their terms apply when you use them, and we are not responsible for them. Links to Google Maps open outside Spacio.",
+        "Spacio works with services such as Google (sign-in), Cloudinary (photos), OpenStreetMap (maps) and Groq (the AI assistant). Their terms apply when you use them, and we are not responsible for them. Links to Google Maps open outside Spacio.",
       ],
     },
     {
@@ -259,7 +265,7 @@ export const TERMS = {
     {
       title: "Suspension and ending your account",
       body: [
-        "We may suspend or remove accounts, listings or content that break these Terms, put others at risk, or that we must remove by law. You can stop using Spacio at any time. To delete your account, email us at the address below. Terms that are meant to continue, such as those about payments already made, liability and disputes, stay in effect.",
+        "We may suspend or remove accounts, listings or content that break these Terms, put others at risk, or that we must remove by law. You can stop using Spacio at any time, and you can delete your account yourself on the Profile & settings page. Deleting your account also deletes your listings and the bookings, chats and reviews connected to it, and it cannot be undone. Terms that are meant to continue, such as those about liability and disputes, stay in effect.",
       ],
     },
     {
@@ -268,9 +274,9 @@ export const TERMS = {
         "Spacio is provided “as is” and “as available”. To the fullest extent the law allows:",
         [
           "We do not promise that Spacio will always work, be secure or be free of errors.",
-          "We are not responsible for what Hosts and Guests do or fail to do, for the condition, safety or legality of any space, or for items that are lost or damaged.",
+          "We are not responsible for what Hosts and Guests do or fail to do, for the condition, safety or legality of any space, for payments between users, or for items that are lost or damaged.",
           "We are not liable for indirect or consequential losses, such as lost profit or lost business.",
-          "Our total liability for any claim connected with Spacio is limited to the amount you paid through Spacio for the booking the claim is about.",
+          "Our total liability for any claim connected with Spacio is limited to the amount you have paid to Spacio, if any.",
         ],
         "Nothing in these Terms removes any right you have under Indian consumer law that cannot be excluded.",
       ],

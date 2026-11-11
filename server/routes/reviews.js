@@ -14,7 +14,7 @@ router.get("/listing/:listingId", async (req, res) => {
 });
 
 // POST /api/reviews  { bookingId, rating, comment }
-// Only the customer of a paid booking can review, and only once.
+// Only the customer of a confirmed (approved) booking can review, and only once.
 router.post("/", auth, async (req, res) => {
   const { bookingId, rating, comment } = req.body;
 
@@ -22,8 +22,8 @@ router.post("/", auth, async (req, res) => {
   if (!booking || booking.customer.toString() !== req.userId) {
     return res.status(404).json({ message: "Booking not found" });
   }
-  if (booking.status !== "paid") {
-    return res.status(400).json({ message: "You can review only after paying for the booking" });
+  if (booking.status !== "approved") {
+    return res.status(400).json({ message: "You can review only after your booking is confirmed" });
   }
   if (await Review.findOne({ booking: bookingId })) {
     return res.status(400).json({ message: "You already reviewed this booking" });

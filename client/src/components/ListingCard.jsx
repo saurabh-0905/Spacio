@@ -4,7 +4,7 @@ import Icon from "./Icons.jsx";
 
 export default function ListingCard({ listing }) {
   return (
-    <Link to={"/listings/" + listing._id} className="card">
+    <Link to={"/listings/" + listing._id} className={"card" + (listing.unavailableToday ? " is-unavailable" : "")}>
       <div className="card-media">
         {listing.images[0] ? (
           <img src={listing.images[0]} alt={listing.title} loading="lazy" />
@@ -15,6 +15,8 @@ export default function ListingCard({ listing }) {
         {listing.instantBook && (
           <span className="badge badge-lime"><Icon name="bolt" size={12} /> Instant</span>
         )}
+        {listing.isDemo && <span className="badge badge-demo">Demo listing</span>}
+        {listing.unavailableToday && <span className="badge badge-unavailable">Unavailable today</span>}
       </div>
       <div className="card-body">
         <h3>{listing.title}</h3>

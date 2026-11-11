@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api.js";
 import Icon from "../components/Icons.jsx";
-import { categoryLabel, errorMessage, formatDate } from "../utils.js";
+import { categoryLabel, errorMessage, formatDate, statusLabel } from "../utils.js";
 
 // "My spaces": the owner's listings and the booking requests they received
 export default function OwnerDashboard() {
@@ -39,7 +39,7 @@ export default function OwnerDashboard() {
   }
 
   async function deleteListing(id) {
-    if (!confirm("Delete this space?")) return;
+    if (!confirm("Delete this space? Its bookings, chats and reviews will be deleted too. This cannot be undone.")) return;
     try {
       await api.delete("/listings/" + id);
       loadData();
@@ -49,15 +49,16 @@ export default function OwnerDashboard() {
   }
 
   // Numbers for the top cards, worked out from the data we already have
+  const now = new Date();
+  const confirmed = requests.filter((b) => b.status === "approved");
+  const upcoming = confirmed.filter((b) => new Date(b.endDate) >= now);
   const pending = requests.filter((b) => b.status === "pending").length;
-  const paid = requests.filter((b) => b.status === "paid");
-  const earned = paid.reduce((sum, b) => sum + b.totalAmount, 0);
 
   const stats = [
     { icon: "home", label: "Your spaces", value: listings.length },
     { icon: "clock", label: "Waiting for approval", value: pending },
-    { icon: "check", label: "Paid bookings", value: paid.length },
-    { icon: "wallet", label: "Earned", value: "₹" + earned },
+    { icon: "check", label: "Confirmed bookings", value: confirmed.length },
+    { icon: "calendar", label: "Upcoming bookings", value: upcoming.length },
   ];
 
   return (
@@ -89,7 +90,7 @@ export default function OwnerDashboard() {
         <div className="state-box">
           <span className="state-icon"><Icon name="home" size={28} /></span>
           <h3>You have not listed anything yet</h3>
-          <p className="muted">List a garage, parking spot, office or terrace and start earning.</p>
+          <p className="muted">List a garage, parking spot, office, court or terrace and start sharing it.</p>
           <Link to="/add-space" className="btn btn-dark">List your first space</Link>
         </div>
       ) : (
@@ -100,10 +101,19 @@ export default function OwnerDashboard() {
               <div className="item-main">
                 <Link to={"/listings/" + l._id} className="item-title">{l.title}</Link>
                 <p className="muted">{categoryLabel(l.category)} · {l.city} · ₹{l.pricePerDay} / day</p>
+                {(l.isDemo || l.unavailableToday) && (
+                  <p className="tag-row">
+                    {l.isDemo && <span className="chip chip-demo">Demo listing</span>}
+                    {l.unavailableToday && <span className="chip chip-cancelled">Unavailable today</span>}
+                  </p>
+                )}
               </div>
-              <button className="btn btn-danger btn-sm" onClick={() => deleteListing(l._id)}>
-                <Icon name="trash" size={16} /> Delete
-              </button>
+              <div className="item-actions">
+                <Link to={"/edit-space/" + l._id} className="btn btn-ghost btn-sm"><Icon name="edit" size={16} /> Edit</Link>
+                <button className="btn btn-danger btn-sm" onClick={() => deleteListing(l._id)}>
+                  <Icon name="trash" size={16} /> Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -122,7 +132,7 @@ export default function OwnerDashboard() {
                   {b.customer.name} · {formatDate(b.startDate)} to {formatDate(b.endDate)} · ₹{b.totalAmount}
                 </p>
               </div>
-              <span className={"chip chip-" + b.status}>{b.status}</span>
+              <span className={"chip chip-" + b.status}>{statusLabel(b.status)}</span>
               <div className="item-actions">
                 {b.status === "pending" && (
                   <>

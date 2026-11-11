@@ -7,7 +7,7 @@ const listingSchema = new mongoose.Schema(
     description: String,
     category: {
       type: String,
-      enum: ["storage", "parking", "workspace", "event"],
+      enum: ["storage", "parking", "workspace", "event", "sports", "other"],
       required: true,
     },
     images: [String],

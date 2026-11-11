@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api.js";
 import Icon from "../components/Icons.jsx";
-import { errorMessage, formatDate } from "../utils.js";
+import { errorMessage, formatDate, statusLabel } from "../utils.js";
 
-// Small form to rate a space after paying
+// Small form to rate a space once the booking is confirmed
 function ReviewForm({ booking, onDone }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -58,35 +58,10 @@ export default function MyBookings() {
   }, []);
 
   async function cancel(id) {
+    if (!confirm("Cancel this booking?")) return;
     try {
       await api.put(`/bookings/${id}/status`, { status: "cancelled" });
       loadBookings();
-    } catch (err) {
-      alert(errorMessage(err));
-    }
-  }
-
-  async function pay(booking) {
-    try {
-      // 1. server creates a Razorpay order
-      const res = await api.post("/payments/create-order", { bookingId: booking._id });
-
-      // 2. open the Razorpay popup
-      const options = {
-        key: res.data.keyId,
-        amount: res.data.amount,
-        currency: "INR",
-        name: "Spacio",
-        description: booking.listing?.title,
-        order_id: res.data.orderId,
-        theme: { color: "#101211" },
-        // 3. after payment, the server checks that it is real
-        handler: async (response) => {
-          await api.post("/payments/verify", { bookingId: booking._id, ...response });
-          loadBookings();
-        },
-      };
-      new window.Razorpay(options).open();
     } catch (err) {
       alert(errorMessage(err));
     }
@@ -107,38 +82,46 @@ export default function MyBookings() {
         <div className="state-box">
           <span className="state-icon"><Icon name="calendar" size={28} /></span>
           <h3>No bookings yet</h3>
-          <p className="muted">Find a storage, parking, workspace or event space and book it.</p>
+          <p className="muted">Find a storage, parking, workspace, sports or event space and book it.</p>
           <Link to="/" className="btn btn-dark">Find a space</Link>
         </div>
       ) : (
         <div className="list">
-          {bookings.map((b) => (
-            <div key={b._id} className="item item-col">
-              <div className="item-row">
-                {b.listing?.images?.[0] ? (
-                  <img className="thumb" src={b.listing.images[0]} alt="" />
-                ) : (
-                  <div className="thumb thumb-empty"><Icon name="image" size={22} /></div>
+          {bookings.map((b) => {
+            const confirmed = b.status === "approved";
+            return (
+              <div key={b._id} className="item item-col">
+                <div className="item-row">
+                  {b.listing?.images?.[0] ? (
+                    <img className="thumb" src={b.listing.images[0]} alt="" />
+                  ) : (
+                    <div className="thumb thumb-empty"><Icon name="image" size={22} /></div>
+                  )}
+                  <div className="item-main">
+                    <strong className="item-title">{b.listing?.title}</strong>
+                    <p className="muted">{b.listing?.city}</p>
+                    <p className="muted">{formatDate(b.startDate)} to {formatDate(b.endDate)} · ₹{b.totalAmount} in total</p>
+                  </div>
+                  <span className={"chip chip-" + b.status}>{statusLabel(b.status)}</span>
+                  <div className="item-actions">
+                    {confirmed && b.listing?.contactPhone && (
+                      <a href={"tel:+91" + b.listing.contactPhone} className="btn btn-primary btn-sm">
+                        <Icon name="phone" size={16} /> Call host
+                      </a>
+                    )}
+                    {["pending", "approved"].includes(b.status) && (
+                      <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Cancel</button>
+                    )}
+                    <Link to={"/chat/" + b._id} className="btn btn-ghost btn-sm"><Icon name="chat" size={16} /> Chat</Link>
+                  </div>
+                </div>
+                {confirmed && (
+                  <p className="booking-hint">Your booking is confirmed. Spacio does not take payments, so agree with the host how and when to pay, in the chat or by phone.</p>
                 )}
-                <div className="item-main">
-                  <strong className="item-title">{b.listing?.title}</strong>
-                  <p className="muted">{b.listing?.city}</p>
-                  <p className="muted">{formatDate(b.startDate)} to {formatDate(b.endDate)} · ₹{b.totalAmount}</p>
-                </div>
-                <span className={"chip chip-" + b.status}>{b.status}</span>
-                <div className="item-actions">
-                  {b.status === "approved" && (
-                    <button className="btn btn-primary btn-sm" onClick={() => pay(b)}>Pay ₹{b.totalAmount}</button>
-                  )}
-                  {["pending", "approved"].includes(b.status) && (
-                    <button className="btn btn-danger btn-sm" onClick={() => cancel(b._id)}>Cancel</button>
-                  )}
-                  <Link to={"/chat/" + b._id} className="btn btn-ghost btn-sm"><Icon name="chat" size={16} /> Chat</Link>
-                </div>
+                {confirmed && !b.reviewed && <ReviewForm booking={b} onDone={loadBookings} />}
               </div>
-              {b.status === "paid" && !b.reviewed && <ReviewForm booking={b} onDone={loadBookings} />}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

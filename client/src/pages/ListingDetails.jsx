@@ -4,7 +4,7 @@ import api from "../api.js";
 import { useAuth } from "../AuthContext.jsx";
 import { ListingsMap } from "../components/Maps.jsx";
 import Icon from "../components/Icons.jsx";
-import { categoryLabel, errorMessage, formatDate, formatPhone } from "../utils.js";
+import { categoryLabel, errorMessage, formatDate, formatPhone, localToday } from "../utils.js";
 
 export default function ListingDetails() {
   const { id } = useParams();
@@ -49,7 +49,7 @@ export default function ListingDetails() {
     );
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
 
   // Price preview: number of days (both days count) x price per day
   let days = 0;
@@ -63,11 +63,22 @@ export default function ListingDetails() {
     : null;
 
   const photos = listing.images.slice(0, 4);
+  const isOwner = Boolean(user) && listing.owner._id === user.id;
 
   // Links to Google Maps (coordinates are saved as [lng, lat])
   const [spotLng, spotLat] = listing.location.coordinates;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${spotLat},${spotLng}`;
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${spotLat},${spotLng}`;
+
+  async function handleDelete() {
+    if (!confirm("Delete this space? Its bookings, chats and reviews will be deleted too. This cannot be undone.")) return;
+    try {
+      await api.delete("/listings/" + id);
+      navigate("/my-spaces");
+    } catch (err) {
+      alert(errorMessage(err));
+    }
+  }
 
   async function handleBook(e) {
     e.preventDefault();
@@ -78,8 +89,8 @@ export default function ListingDetails() {
       const res = await api.post("/bookings", { listingId: id, ...dates });
       alert(
         res.data.status === "approved"
-          ? "Booked! Go to My bookings to pay."
-          : "Request sent! You can pay once the owner approves it."
+          ? "Booked! Your booking is confirmed. Agree on payment with the host from My bookings."
+          : "Request sent! The host will review it. You can follow it in My bookings."
       );
       navigate("/my-bookings");
     } catch (err) {
@@ -108,11 +119,26 @@ export default function ListingDetails() {
           <div className="meta-row">
             <span className="badge badge-dark-solid">{categoryLabel(listing.category)}</span>
             {listing.instantBook && <span className="badge badge-lime-solid"><Icon name="bolt" size={12} /> Instant booking</span>}
+            {listing.isDemo && <span className="badge badge-demo-solid">Demo listing</span>}
+            {listing.unavailableToday && <span className="badge badge-unavailable-solid">Unavailable today</span>}
           </div>
           <h1 className="detail-title">{listing.title}</h1>
           <p className="muted detail-sub">
             <Icon name="pin" size={16} /> {[listing.address, listing.city].filter(Boolean).join(", ")} · Hosted by {listing.owner.name}
           </p>
+
+          {listing.unavailableToday && (
+            <div className="notice notice-warn">
+              <Icon name="alert" size={18} />
+              <span>This space already has a confirmed booking for today. You can still book other dates.</span>
+            </div>
+          )}
+          {listing.isDemo && (
+            <div className="notice">
+              <Icon name="alert" size={18} />
+              <span>Demo listing: this space was added by the Spacio team to show how the app works. It is not a real offer.</span>
+            </div>
+          )}
 
           <h2 className="h3">About this space</h2>
           <p className="description">{listing.description || "The host has not added a description yet."}</p>
@@ -158,7 +184,7 @@ export default function ListingDetails() {
           <h2 className="h3">
             Reviews {averageRating && <span className="rating-pill">★ {averageRating} · {reviews.length}</span>}
           </h2>
-          {reviews.length === 0 && <p className="muted">No reviews yet. Reviews appear after guests have paid for a booking.</p>}
+          {reviews.length === 0 && <p className="muted">No reviews yet. Guests can review a space once their booking is confirmed.</p>}
           {reviews.map((r) => (
             <div key={r._id} className="review">
               <div className="review-head">
@@ -171,32 +197,43 @@ export default function ListingDetails() {
           ))}
         </div>
 
-        <form className="booking-box" onSubmit={handleBook}>
-          <p className="booking-price"><strong>₹{listing.pricePerDay}</strong> <span>/ day</span></p>
-
-          <div className="field">
-            <label htmlFor="startDate">From</label>
-            <input id="startDate" type="date" required min={today} value={dates.startDate} onChange={(e) => setDates({ ...dates, startDate: e.target.value })} />
-          </div>
-          <div className="field">
-            <label htmlFor="endDate">To</label>
-            <input id="endDate" type="date" required min={dates.startDate || today} value={dates.endDate} onChange={(e) => setDates({ ...dates, endDate: e.target.value })} />
-          </div>
-
-          {total > 0 && (
-            <div className="summary">
-              <div><span>₹{listing.pricePerDay} × {days} {days === 1 ? "day" : "days"}</span><span>₹{total}</span></div>
-              <div className="summary-total"><span>Total</span><span>₹{total}</span></div>
+        {isOwner ? (
+          <div className="booking-box">
+            <p className="booking-price"><strong>₹{listing.pricePerDay}</strong> <span>/ day</span></p>
+            <p className="muted owner-note">This is your space.</p>
+            <div className="stack-sm">
+              <Link to={"/edit-space/" + id} className="btn btn-dark btn-block"><Icon name="edit" size={16} /> Edit space</Link>
+              <button type="button" className="btn btn-danger btn-block" onClick={handleDelete}><Icon name="trash" size={16} /> Delete space</button>
             </div>
-          )}
+          </div>
+        ) : (
+          <form className="booking-box" onSubmit={handleBook}>
+            <p className="booking-price"><strong>₹{listing.pricePerDay}</strong> <span>/ day</span></p>
 
-          {error && <p className="error-box" role="alert">{error}</p>}
+            <div className="field">
+              <label htmlFor="startDate">From</label>
+              <input id="startDate" type="date" required min={today} value={dates.startDate} onChange={(e) => setDates({ ...dates, startDate: e.target.value })} />
+            </div>
+            <div className="field">
+              <label htmlFor="endDate">To</label>
+              <input id="endDate" type="date" required min={dates.startDate || today} value={dates.endDate} onChange={(e) => setDates({ ...dates, endDate: e.target.value })} />
+            </div>
 
-          <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={submitting}>
-            {submitting ? "Please wait..." : listing.instantBook ? "Book now" : "Request booking"}
-          </button>
-          <p className="fine-print">You pay securely online from My bookings once the booking is confirmed.</p>
-        </form>
+            {total > 0 && (
+              <div className="summary">
+                <div><span>₹{listing.pricePerDay} × {days} {days === 1 ? "day" : "days"}</span><span>₹{total}</span></div>
+                <div className="summary-total"><span>Total</span><span>₹{total}</span></div>
+              </div>
+            )}
+
+            {error && <p className="error-box" role="alert">{error}</p>}
+
+            <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={submitting}>
+              {submitting ? "Please wait..." : listing.instantBook ? "Book now" : "Request booking"}
+            </button>
+            <p className="fine-print">Spacio does not take payments. After the booking is confirmed, agree on payment directly with the host.</p>
+          </form>
+        )}
       </div>
     </div>
   );
