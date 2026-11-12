@@ -17,11 +17,12 @@ export default function ListingCard({ listing }) {
         )}
         {listing.isDemo && <span className="badge badge-demo">Demo listing</span>}
         {listing.unavailableToday && <span className="badge badge-unavailable">Unavailable today</span>}
+        {!listing.unavailableToday && listing.bookedSlotsToday?.length > 0 && <span className="badge badge-partial">Booked today</span>}
       </div>
       <div className="card-body">
         <h3>{listing.title}</h3>
         <p className="card-meta"><Icon name="pin" size={15} /> {listing.city || "Location on map"}</p>
-        <p className="card-price"><strong>₹{listing.pricePerDay}</strong> <span>/ day</span></p>
+        <p className="card-price"><strong>₹{listing.price}</strong> <span>/ {listing.priceUnit === "hour" ? "hour" : "day"}</span></p>
       </div>
     </Link>
   );

@@ -175,7 +175,7 @@ export const TERMS = {
     {
       title: "Booking a space",
       body: [
-        "A Guest chooses dates and sends a booking request, or books instantly if the Host allows it. The price is shown per day. The total is the price per day multiplied by the number of days, counting both the first and the last day.",
+        "A Guest chooses dates and sends a booking request, or books instantly if the Host allows it. The Host chooses whether the price is per day or per hour. For a daily price, the total is the price per day multiplied by the number of days, counting both the first and the last day. For an hourly price, the Guest picks one date and a start and end hour, and the total is the price per hour multiplied by the number of hours.",
         "If the Host must approve, the booking stays Pending until the Host approves or rejects it. When the Host approves, or when instant booking is used, the booking shows as Confirmed. Hosts and Guests should then agree directly on payment and on how the space is handed over.",
         "As a Guest you agree to:",
         [

@@ -15,12 +15,12 @@ const SEARCH_URL = "https://photon.komoot.io/api/";
 const INDIA_BOX = "68.1,6.7,97.4,35.7";
 
 // A price tag pin for each space (styled in index.css)
-function pricePin(price) {
+function pricePin(listing) {
   return L.divIcon({
     className: "price-pin",
-    html: "₹" + price,
-    iconSize: [64, 30],
-    iconAnchor: [32, 30],
+    html: "₹" + listing.price + (listing.priceUnit === "hour" ? "/hr" : ""),
+    iconSize: [78, 30],
+    iconAnchor: [39, 30],
     popupAnchor: [0, -30],
   });
 }
@@ -43,10 +43,10 @@ export function ListingsMap({ listings }) {
     <MapContainer key={center.join(",") + listings.length} center={center} zoom={listings.length === 1 ? 15 : 12} className="map">
       <TileLayer url={TILES} attribution={CREDIT} />
       {listings.map((l) => (
-        <Marker key={l._id} position={toLatLng(l)} icon={pricePin(l.pricePerDay)}>
+        <Marker key={l._id} position={toLatLng(l)} icon={pricePin(l)}>
           <Popup>
             <Link to={"/listings/" + l._id}>{l.title}</Link>
-            <br />₹{l.pricePerDay} / day
+            <br />₹{l.price} / {l.priceUnit === "hour" ? "hour" : "day"}
             <br />
             <a href={googleMapsLink(...toLatLng(l))} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
           </Popup>

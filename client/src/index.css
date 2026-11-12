@@ -603,3 +603,13 @@ a.item-title:hover { text-decoration: underline; }
 .footer-grid a.contact-link svg { flex-shrink: 0; margin-top: 4px; }
 .footer-grid a.social-btn { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; margin-top: 18px; padding: 0; border: 1px solid var(--line-dark); border-radius: 50%; color: var(--white); transition: border-color 0.15s, color 0.15s, transform 0.15s; }
 .footer-grid a.social-btn:hover { color: var(--lime); border-color: var(--lime); transform: translateY(-2px); }
+
+/* ---------- per-hour pricing ---------- */
+.price-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.price-row input { flex: 1; min-width: 160px; }
+.price-row .segmented { flex-shrink: 0; }
+.field-row-tight { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.price-filter select { padding: 8px 12px; border-radius: 999px; }
+.badge-partial { top: auto; bottom: 12px; right: 12px; background: #8a5a00; color: var(--white); }
+.badge-partial-solid { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; font-size: 0.82rem; font-weight: 700; background: #8a5a00; color: var(--white); }
+.chip-partial { background: #fff1c9; color: #6b4e00; }

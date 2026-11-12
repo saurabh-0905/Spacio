@@ -7,7 +7,7 @@ import { ListingsMap } from "../components/Maps.jsx";
 import Icon from "../components/Icons.jsx";
 import { CATEGORIES, errorMessage, localToday } from "../utils.js";
 
-const emptyFilters = { category: "", city: "", maxPrice: "", startDate: "", endDate: "", lat: "", lng: "" };
+const emptyFilters = { category: "", city: "", maxPrice: "", priceUnit: "day", startDate: "", endDate: "", lat: "", lng: "" };
 
 const STEPS = [
   { title: "Discover", text: "Search by category, city, dates or distance, and compare spaces on a list or a map." },
@@ -47,6 +47,7 @@ export default function Home() {
       for (const key in f) {
         if (f[key]) params[key] = f[key];
       }
+      if (!params.maxPrice) delete params.priceUnit; // the price type only matters together with a maximum price
       const res = await api.get("/listings", { params });
       setListings(res.data);
     } catch (err) {
@@ -206,11 +207,15 @@ export default function Home() {
                   name="maxPrice"
                   type="number"
                   min="1"
-                  placeholder="Max ₹ per day"
-                  aria-label="Maximum price per day"
+                  placeholder="Max price (₹)"
+                  aria-label="Maximum price"
                   value={filters.maxPrice}
                   onChange={handleChange}
                 />
+                <select name="priceUnit" value={filters.priceUnit} onChange={handleChange} aria-label="Price type">
+                  <option value="day">per day</option>
+                  <option value="hour">per hour</option>
+                </select>
                 <button type="submit" className="btn btn-dark btn-sm">Apply</button>
               </form>
               <div className="segmented" role="group" aria-label="View">

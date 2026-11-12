@@ -15,6 +15,7 @@ import reviewRoutes from "./routes/reviews.js";
 import messageRoutes from "./routes/messages.js";
 import supportRoutes from "./routes/support.js";
 import Booking from "./models/Booking.js";
+import Listing from "./models/Listing.js";
 import Message from "./models/Message.js";
 
 // Fixes the "querySrv ECONNREFUSED" error when connecting to MongoDB Atlas on some networks
@@ -90,6 +91,15 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("MongoDB connected");
+    // Listings made before hourly prices existed have "pricePerDay". Move that to "price" with the unit "day".
+    try {
+      await Listing.collection.updateMany(
+        { price: { $exists: false }, pricePerDay: { $exists: true } },
+        [{ $set: { price: "$pricePerDay", priceUnit: "day" } }, { $unset: "pricePerDay" }]
+      );
+    } catch (err) {
+      console.error("Could not update old listings:", err.message);
+    }
     // Payments were removed. Bookings that were marked "paid" in the old version are simply confirmed now.
     try {
       await Booking.updateMany({ status: "paid" }, { $set: { status: "approved" } });

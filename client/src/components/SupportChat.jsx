@@ -27,6 +27,10 @@ const QUICK_QUESTIONS = [
     a: "Yes. A Pending or Confirmed booking can be cancelled with the Cancel button in My bookings. Because Spacio does not handle payments, any refund is agreed directly with the host.",
   },
   {
+    q: "Can I book by the hour?",
+    a: "Yes, when the host priced the space per hour. Choose one date, then a From and a To hour, such as 2:00 PM to 4:00 PM. The total is the hourly price times the number of hours. Per-day spaces are booked by dates instead.",
+  },
+  {
     q: "What is instant booking?",
     a: "Hosts can allow instant booking. Then your booking is confirmed straight away, without waiting for the host.",
   },

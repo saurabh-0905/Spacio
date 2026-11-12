@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api.js";
 import Icon from "../components/Icons.jsx";
-import { categoryLabel, errorMessage, formatDate, statusLabel } from "../utils.js";
+import { bookingWhen, categoryLabel, errorMessage, priceText, statusLabel } from "../utils.js";
 
 // "My spaces": the owner's listings and the booking requests they received
 export default function OwnerDashboard() {
@@ -100,11 +100,12 @@ export default function OwnerDashboard() {
               {l.images[0] ? <img className="thumb" src={l.images[0]} alt="" /> : <div className="thumb thumb-empty"><Icon name="image" size={22} /></div>}
               <div className="item-main">
                 <Link to={"/listings/" + l._id} className="item-title">{l.title}</Link>
-                <p className="muted">{categoryLabel(l.category)} · {l.city} · ₹{l.pricePerDay} / day</p>
-                {(l.isDemo || l.unavailableToday) && (
+                <p className="muted">{categoryLabel(l.category)} · {l.city} · {priceText(l)}</p>
+                {(l.isDemo || l.unavailableToday || l.bookedSlotsToday?.length > 0) && (
                   <p className="tag-row">
                     {l.isDemo && <span className="chip chip-demo">Demo listing</span>}
                     {l.unavailableToday && <span className="chip chip-cancelled">Unavailable today</span>}
+                    {!l.unavailableToday && l.bookedSlotsToday?.length > 0 && <span className="chip chip-partial">Booked today</span>}
                   </p>
                 )}
               </div>
@@ -129,7 +130,7 @@ export default function OwnerDashboard() {
               <div className="item-main">
                 <strong className="item-title">{b.listing?.title}</strong>
                 <p className="muted">
-                  {b.customer.name} · {formatDate(b.startDate)} to {formatDate(b.endDate)} · ₹{b.totalAmount}
+                  {b.customer.name} · {bookingWhen(b)} · ₹{b.totalAmount}
                 </p>
               </div>
               <span className={"chip chip-" + b.status}>{statusLabel(b.status)}</span>

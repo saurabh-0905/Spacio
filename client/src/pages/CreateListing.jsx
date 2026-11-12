@@ -20,7 +20,7 @@ export default function CreateListing() {
   const { user } = useAuth();
 
   const [form, setForm] = useState({
-    title: "", description: "", category: "storage", address: "", city: "", pricePerDay: "", instantBook: false,
+    title: "", description: "", category: "storage", address: "", city: "", price: "", priceUnit: "day", instantBook: false,
     contactPhone: user?.phone || localStorage.getItem("spacio_phone") || "", // from your profile, or your last listing
   });
   const [position, setPosition] = useState({ lat: "", lng: "" });
@@ -47,7 +47,8 @@ export default function CreateListing() {
           category: l.category,
           address: l.address || "",
           city: l.city || "",
-          pricePerDay: String(l.pricePerDay),
+          price: String(l.price),
+          priceUnit: l.priceUnit || "day",
           instantBook: l.instantBook,
           contactPhone: l.contactPhone || user.phone || "",
         });
@@ -220,8 +221,19 @@ export default function CreateListing() {
         <section className="panel">
           <h2 className="h3">3. Price and booking</h2>
           <div className="field">
-            <label htmlFor="pricePerDay">Price per day (₹)</label>
-            <input id="pricePerDay" name="pricePerDay" type="number" min="1" placeholder="e.g. 70" value={form.pricePerDay} onChange={handleChange} required />
+            <label htmlFor="price">Price (₹)</label>
+            <div className="price-row">
+              <div className="segmented" role="group" aria-label="Price type">
+                <button type="button" className={form.priceUnit === "day" ? "on" : ""} onClick={() => setForm({ ...form, priceUnit: "day" })}>Per day</button>
+                <button type="button" className={form.priceUnit === "hour" ? "on" : ""} onClick={() => setForm({ ...form, priceUnit: "hour" })}>Per hour</button>
+              </div>
+              <input id="price" name="price" type="number" min="1" placeholder={form.priceUnit === "hour" ? "e.g. 200 per hour" : "e.g. 70 per day"} value={form.price} onChange={handleChange} required />
+            </div>
+            <small className="muted">
+              {form.priceUnit === "hour"
+                ? "Guests book by the hour on one date, for example 2:00 PM to 4:00 PM."
+                : "Guests book whole days, from a start date to an end date."}
+            </small>
           </div>
           <div className="field">
             <label htmlFor="contactPhone">Your contact number</label>

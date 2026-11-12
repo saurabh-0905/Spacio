@@ -118,12 +118,12 @@ Plenty of garages, parking spots, spare rooms and terraces sit empty, while othe
 
 - **Accounts:** register and log in with email and password (bcrypt, 7-day JWT) or with Google; Google users are matched by Google ID so changing the email never creates a duplicate account.
 - **Profile and settings:** an account menu on the round letter icon; edit name, email and mobile number; log out from the menu only.
-- **Listings:** six categories (Storage, Parking, Workspaces, Event spaces, Sports, Other); title, description, address, city, daily price, instant-booking switch, contact number and up to 4 photos (5 MB each) stored on Cloudinary.
+- **Listings:** six categories (Storage, Parking, Workspaces, Event spaces, Sports, Other); title, description, address, city, price (per day or per hour), instant-booking switch, contact number and up to 4 photos (5 MB each) stored on Cloudinary.
 - **Edit and delete:** hosts can change anything, including photos (keep, remove, reorder, add) and the map pin. Deleting a space also removes its bookings, chats, reviews and photos.
 - **Demo listings:** every space owned by the demo account (the Spacio support email) carries a "Demo listing" tag and a short notice.
 - **Location:** search an address (OpenStreetMap data through Photon) and pick a suggestion, click the map, drag the pin, or use your own location. Locations are saved as GeoJSON with a `2dsphere` index.
-- **Search:** category, city, max price per day, free dates (spaces with confirmed bookings in the range are hidden) and a 10 km "near me" mode. A space with a confirmed booking for today shows an **Unavailable today** badge.
-- **Bookings:** price is `price per day × number of days` (first and last day both count). Past dates, your own spaces and already-booked dates are rejected.
+- **Search:** category, city, max price (per day or per hour), free dates (per-day spaces with confirmed bookings in the range are hidden) and a 10 km "near me" mode. A per-day space with a confirmed booking for today shows **Unavailable today**; a per-hour space with some hours taken shows **Booked today** and lists those hours.
+- **Bookings:** a space is priced **per day** (guests pick a start and end date; total is `price × days`, first and last day both count) or **per hour** (guests pick one date and whole hours such as 2:00 PM to 4:00 PM; total is `price × hours`). Past dates and times, your own spaces, and dates or hours that are already booked are rejected. Hours right before or after an existing booking are fine.
 - **Statuses:** `pending → approved` (shown as **Confirmed**), or `rejected` / `cancelled`. Guests can cancel a pending or confirmed booking.
 - **No online payments:** Spacio does not handle money. After a booking is confirmed, guest and host agree on payment directly through the chat or by phone (a **Call host** button is shown).
 - **Chat:** one private room per booking; only the host and guest can join; history is saved in MongoDB.
@@ -281,12 +281,12 @@ Spacio/
 |:--|:--|:--|
 | Auth | `POST /api/auth/register`, `/login`, `/google` | Returns a JWT and the user |
 | Profile | `GET`, `PUT` and `DELETE /api/auth/me` | Name, email, mobile; delete the account (login required) |
-| Listings | `GET /api/listings` | Filters: `category`, `city`, `maxPrice`, `startDate`, `endDate`, `lat`, `lng` |
+| Listings | `GET /api/listings` | Filters: `category`, `city`, `maxPrice` with `priceUnit` (`day` or `hour`), `startDate`, `endDate`, `lat`, `lng` |
 | | `GET /api/listings/:id` | Includes the host phone only for logged-in users |
 | | `GET /api/listings/mine` | The host's own spaces |
 | | `POST /api/listings`, `PUT /api/listings/:id` | Create or edit. Photos sent as multipart form data |
 | | `DELETE /api/listings/:id` | Also removes bookings, chats, reviews and photos |
-| Bookings | `POST /api/bookings` | Request or instant booking |
+| Bookings | `POST /api/bookings` | Request or instant booking. Per-day spaces send `startDate` and `endDate`; per-hour spaces send `startDate`, `startTime` and `endTime` |
 | | `GET /api/bookings/mine`, `/requests`, `/:id` | Guest view, host view, one booking |
 | | `PUT /api/bookings/:id/status` | Approve, reject or cancel |
 | Reviews | `GET /api/reviews/listing/:id`, `POST /api/reviews` | Only for confirmed bookings |
@@ -402,6 +402,7 @@ Then set `CLIENT_URL` on Render to the Vercel address and add the same address t
 - [x] Google sign-in, profile page and AI support assistant
 - [x] Edit and delete listings, delete account
 - [x] Sports and Other categories, demo tag, "Unavailable today" badge
+- [x] Per-hour pricing and hourly bookings
 - [x] Privacy Policy and Terms of Use
 - [ ] Online payments and refunds (removed for now)
 - [ ] Password reset and email verification
@@ -411,9 +412,21 @@ Then set `CLIENT_URL` on Render to the Vercel address and add the same address t
 
 ---
 
+## About the developer
+
+Built by **Saurabh Kishor Tatar**, as a full-stack portfolio project.
+
+<!-- Add your links, for example:
+[![Portfolio](https://img.shields.io/badge/Portfolio-101211?style=for-the-badge&logo=googlechrome&logoColor=B7FF35)](https://your-site)
+[![GitHub](https://img.shields.io/badge/GitHub-101211?style=for-the-badge&logo=github&logoColor=B7FF35)](https://github.com/YOUR-USERNAME)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-101211?style=for-the-badge&logo=linkedin&logoColor=B7FF35)](https://www.linkedin.com/in/YOUR-PROFILE)
+-->
+
+Suggestions and bug reports are welcome through GitHub issues.
+
 ## License
 
-This project is licensed under the MIT License. Suggestions and bug reports are welcome through GitHub issues.
+No license file is included yet, so all rights are reserved by the author. Add a `LICENSE` file if you want others to be able to reuse the code.
 
 <br />
 

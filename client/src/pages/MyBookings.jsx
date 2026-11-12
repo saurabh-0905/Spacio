@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api.js";
 import Icon from "../components/Icons.jsx";
-import { errorMessage, formatDate, statusLabel } from "../utils.js";
+import { bookingWhen, errorMessage, statusLabel } from "../utils.js";
 
 // Small form to rate a space once the booking is confirmed
 function ReviewForm({ booking, onDone }) {
@@ -100,7 +100,7 @@ export default function MyBookings() {
                   <div className="item-main">
                     <strong className="item-title">{b.listing?.title}</strong>
                     <p className="muted">{b.listing?.city}</p>
-                    <p className="muted">{formatDate(b.startDate)} to {formatDate(b.endDate)} · ₹{b.totalAmount} in total</p>
+                    <p className="muted">{bookingWhen(b)} · ₹{b.totalAmount} in total</p>
                   </div>
                   <span className={"chip chip-" + b.status}>{statusLabel(b.status)}</span>
                   <div className="item-actions">

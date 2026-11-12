@@ -20,7 +20,9 @@ const listingSchema = new mongoose.Schema(
     },
     // 10-digit Indian mobile number of the host. Only logged-in visitors can see it.
     contactPhone: { type: String, match: [/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"] },
-    pricePerDay: { type: Number, required: true },
+    // The price, and what it is for: "day" (guests book whole days) or "hour" (guests book hours on one date)
+    price: { type: Number, required: true },
+    priceUnit: { type: String, enum: ["day", "hour"], default: "day" },
     instantBook: { type: Boolean, default: false },
   },
   { timestamps: true }

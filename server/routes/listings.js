@@ -13,37 +13,50 @@ import { upload, uploadToCloudinary, deleteFromCloudinary } from "../config/clou
 const router = express.Router();
 const CATEGORIES = Listing.schema.path("category").enumValues;
 
-// Ids of spaces that have a confirmed booking covering today
-async function busyTodayIds() {
+// What is already booked today, for every space that has a confirmed booking covering today:
+// whole: a whole-day booking covers today.  slots: hourly bookings today, as { start, end } in minutes after midnight.
+async function busyToday() {
   const today = todayIST();
-  const ids = await Booking.find({
+  const bookings = await Booking.find({
     status: "approved",
     startDate: { $lte: today },
     endDate: { $gte: today },
-  }).distinct("listing");
-  return new Set(ids.map(String));
+  });
+
+  const busy = new Map();
+  for (const b of bookings) {
+    const key = String(b.listing);
+    const entry = busy.get(key) || { whole: false, slots: [] };
+    if (b.unit === "hour") entry.slots.push({ start: b.startMinutes, end: b.endMinutes });
+    else entry.whole = true;
+    busy.set(key, entry);
+  }
+  return busy;
 }
 
-// What we send to the browser for one space: adds isDemo and unavailableToday,
+// What we send to the browser for one space: adds isDemo, unavailableToday and bookedSlotsToday,
 // and never sends the owner's email address.
-function present(listing, busyToday) {
+function present(listing, busy) {
   const { email, ...owner } = listing.owner || {};
+  const today = busy.get(String(listing._id));
   return {
     ...listing,
     owner,
     isDemo: isDemoEmail(email),
-    unavailableToday: busyToday.has(String(listing._id)),
+    unavailableToday: Boolean(today?.whole),
+    bookedSlotsToday: (today?.slots || []).sort((a, b) => a.start - b.start),
   };
 }
 
 // GET /api/listings?category=&city=&maxPrice=&startDate=&endDate=&lat=&lng=
 // Search spaces. Every filter is optional.
 router.get("/", async (req, res) => {
-  const { category, city, maxPrice, startDate, endDate, lat, lng } = req.query;
+  const { category, city, maxPrice, priceUnit, startDate, endDate, lat, lng } = req.query;
   const filter = {};
 
   if (category) filter.category = category;
-  if (maxPrice) filter.pricePerDay = { $lte: Number(maxPrice) };
+  if (maxPrice) filter.price = { $lte: Number(maxPrice) };
+  if (priceUnit === "day" || priceUnit === "hour") filter.priceUnit = priceUnit; // compare prices of the same kind only
 
   if (city) {
     // escape special characters so the text is searched as plain text
@@ -65,6 +78,7 @@ router.get("/", async (req, res) => {
   if (startDate && endDate) {
     const busyIds = await Booking.find({
       status: "approved",
+      unit: { $ne: "hour" }, // an hourly booking only uses part of a day, so the space is still partly free
       startDate: { $lte: new Date(endDate) },
       endDate: { $gte: new Date(startDate) },
     }).distinct("listing");
@@ -75,23 +89,27 @@ router.get("/", async (req, res) => {
   let query = Listing.find(filter).select("-contactPhone").populate("owner", "name email").lean();
   if (!lat) query = query.sort("-createdAt"); // "near me" is already sorted by distance
 
-  const [listings, busyToday] = await Promise.all([query, busyTodayIds()]);
-  res.json(listings.map((l) => present(l, busyToday)));
+  const [listings, busy] = await Promise.all([query, busyToday()]);
+  res.json(listings.map((l) => present(l, busy)));
 });
 
 // GET /api/listings/mine  -> spaces owned by the logged-in user
 router.get("/mine", auth, async (req, res) => {
   const me = await User.findById(req.userId).select("email");
-  const [listings, busyToday] = await Promise.all([
+  const [listings, busy] = await Promise.all([
     Listing.find({ owner: req.userId }).sort("-createdAt").lean(),
-    busyTodayIds(),
+    busyToday(),
   ]);
   res.json(
-    listings.map((l) => ({
-      ...l,
-      isDemo: isDemoEmail(me?.email),
-      unavailableToday: busyToday.has(String(l._id)),
-    }))
+    listings.map((l) => {
+      const today = busy.get(String(l._id));
+      return {
+        ...l,
+        isDemo: isDemoEmail(me?.email),
+        unavailableToday: Boolean(today?.whole),
+        bookedSlotsToday: today?.slots || [],
+      };
+    })
   );
 });
 
@@ -102,18 +120,24 @@ router.get("/:id", optionalAuth, async (req, res) => {
   const listing = await query.lean();
   if (!listing) return res.status(404).json({ message: "Space not found" });
 
-  res.json(present(listing, await busyTodayIds()));
+  res.json(present(listing, await busyToday()));
 });
 
 // POST /api/listings  (form data with up to 4 photos)
 router.post("/", auth, upload.array("images", 4), async (req, res) => {
-  const { title, description, category, address, city, pricePerDay, instantBook, lat, lng, contactPhone } = req.body;
+  const { title, description, category, address, city, price, priceUnit, instantBook, lat, lng, contactPhone } = req.body;
 
-  if (!title || !category || !pricePerDay) {
+  if (!title || !category || !price) {
     return res.status(400).json({ message: "Title, category and price are required" });
   }
   if (!CATEGORIES.includes(category)) {
     return res.status(400).json({ message: "Please choose a category" });
+  }
+  if (!(Number(price) > 0)) {
+    return res.status(400).json({ message: "Please enter a valid price" });
+  }
+  if (!["day", "hour"].includes(priceUnit)) {
+    return res.status(400).json({ message: "Please choose per day or per hour" });
   }
   if (!lat || !lng) {
     return res.status(400).json({ message: "Please click on the map to set the location" });
@@ -137,7 +161,8 @@ router.post("/", auth, upload.array("images", 4), async (req, res) => {
     address,
     city,
     contactPhone: phone,
-    pricePerDay: Number(pricePerDay),
+    price: Number(price),
+    priceUnit,
     instantBook: instantBook === "true",
     images,
     location: { type: "Point", coordinates: [Number(lng), Number(lat)] },
@@ -155,16 +180,19 @@ router.put("/:id", auth, upload.array("images", 4), async (req, res) => {
     return res.status(404).json({ message: "Space not found" });
   }
 
-  const { title, description, category, address, city, pricePerDay, instantBook, lat, lng, contactPhone, imageOrder } = req.body;
+  const { title, description, category, address, city, price, priceUnit, instantBook, lat, lng, contactPhone, imageOrder } = req.body;
 
-  if (!title || !category || !pricePerDay) {
+  if (!title || !category || !price) {
     return res.status(400).json({ message: "Title, category and price are required" });
   }
   if (!CATEGORIES.includes(category)) {
     return res.status(400).json({ message: "Please choose a category" });
   }
-  if (!(Number(pricePerDay) > 0)) {
+  if (!(Number(price) > 0)) {
     return res.status(400).json({ message: "Please enter a valid price" });
+  }
+  if (!["day", "hour"].includes(priceUnit)) {
+    return res.status(400).json({ message: "Please choose per day or per hour" });
   }
   const phone = cleanPhone(contactPhone);
   if (!isValidPhone(phone)) {
@@ -205,7 +233,8 @@ router.put("/:id", auth, upload.array("images", 4), async (req, res) => {
   listing.category = category;
   listing.address = address;
   listing.city = city;
-  listing.pricePerDay = Number(pricePerDay);
+  listing.price = Number(price);
+  listing.priceUnit = priceUnit;
   listing.instantBook = instantBook === "true";
   listing.contactPhone = phone;
   listing.images = finalImages;

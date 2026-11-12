@@ -41,3 +41,34 @@ export function localToday() {
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
+
+// "₹70 / day" or "₹200 / hour"
+export function priceText(listing) {
+  return `₹${listing.price} / ${listing.priceUnit === "hour" ? "hour" : "day"}`;
+}
+
+// 14 -> "2:00 PM", 0 -> "12:00 AM", 24 -> "12:00 AM (midnight)"
+export function hourLabel(hour) {
+  if (hour === 24) return "12:00 AM (midnight)";
+  const suffix = hour < 12 ? "AM" : "PM";
+  const clock = hour % 12 === 0 ? 12 : hour % 12;
+  return `${clock}:00 ${suffix}`;
+}
+
+// 9 -> "09:00" (the format the server expects)
+export function hourValue(hour) {
+  return String(hour).padStart(2, "0") + ":00";
+}
+
+// { start: 840, end: 960 } (minutes after midnight) -> "2:00 PM to 4:00 PM"
+export function slotText(slot) {
+  return `${hourLabel(slot.start / 60)} to ${hourLabel(slot.end / 60)}`;
+}
+
+// When a booking is: a date range, or one date with hours
+export function bookingWhen(booking) {
+  if (booking.unit === "hour") {
+    return `${formatDate(booking.startDate)}, ${hourLabel(booking.startMinutes / 60)} to ${hourLabel(booking.endMinutes / 60)}`;
+  }
+  return `${formatDate(booking.startDate)} to ${formatDate(booking.endDate)}`;
+}
