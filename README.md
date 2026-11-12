@@ -412,21 +412,9 @@ Then set `CLIENT_URL` on Render to the Vercel address and add the same address t
 
 ---
 
-## About the developer
-
-Built by **Saurabh Kishor Tatar**, as a full-stack portfolio project.
-
-<!-- Add your links, for example:
-[![Portfolio](https://img.shields.io/badge/Portfolio-101211?style=for-the-badge&logo=googlechrome&logoColor=B7FF35)](https://your-site)
-[![GitHub](https://img.shields.io/badge/GitHub-101211?style=for-the-badge&logo=github&logoColor=B7FF35)](https://github.com/YOUR-USERNAME)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-101211?style=for-the-badge&logo=linkedin&logoColor=B7FF35)](https://www.linkedin.com/in/YOUR-PROFILE)
--->
-
-Suggestions and bug reports are welcome through GitHub issues.
-
 ## License
 
-No license file is included yet, so all rights are reserved by the author. Add a `LICENSE` file if you want others to be able to reuse the code.
+The Project is licensed under MIT License .Suggestions and bug reports are welcome through GitHub issues.
 
 <br />
 
